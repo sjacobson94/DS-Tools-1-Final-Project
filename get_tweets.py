@@ -1,6 +1,11 @@
 import requests
 import base64
 import pandas as pd
+import contractions
+import nltk
+import emoji
+from nltk.tokenize import word_tokenize
+
 
 def tweet_generator(tweets):
         for tweet in tweets:
@@ -97,3 +102,47 @@ def get_tweets(topic, num_tweets):
     tweets_df['user_mentions'] = tweets_df['entities'].apply(get_things, args=('user_mentions', 'name'))
     tweets_df['topic'] = topic
     return tweets_df
+
+
+def clean_tweets(data):
+    from nltk.stem import WordNetLemmatizer
+    import re
+    rt = r'RT'
+    rt_pattern = re.compile(rt)
+
+    reference = r'\@\w+:|\@\w+'
+    reference_re = re.compile(reference)
+
+    pattern = r'https://t.co/[A-Z0-9._%+-]+'
+    dots = re.compile(pattern, flags=re.IGNORECASE)
+    data['text'] = data['text'].str.replace(rt_pattern, '').str.replace(reference_re, '').str.replace(dots, '').str.replace(r'^.\s+', '').str.replace('\n', ' . ')
+
+    data['emoji'] = data['text'].apply(lambda x: [(c, emoji.UNICODE_EMOJI[c]) for c in x if c in emoji.UNICODE_EMOJI])
+    
+    stopwords = nltk.corpus.stopwords.words('english')
+
+    wnetl = WordNetLemmatizer()
+
+    def text_cleaner(text):
+        # Expanding contractions
+    #     text = sample_contraction_replacer.do_contraction_normalization(text)
+        text = contractions.fix(text)
+        # Removing stop words
+        tokens = word_tokenize(text)
+        new_tokens = [w for w in tokens if w not in stopwords]
+        # Lemmatizing
+        text = ' '.join([wnetl.lemmatize(w) for w in new_tokens])
+        return text
+    
+    data['tweet_len'] = data.text.apply(len)
+
+    data_cleaner = data[data.tweet_len >= 3]
+
+    def replace_foreign_characters(s):
+        return re.sub(r'[^\x00-\x7f]',r'', s)
+
+    data_cleaner['text'] = data_cleaner['text'].apply(lambda x: replace_foreign_characters(x)).str.strip()
+
+    data_cleaner['text'] = data_cleaner.text.apply(text_cleaner)
+    
+    return data_cleaner
