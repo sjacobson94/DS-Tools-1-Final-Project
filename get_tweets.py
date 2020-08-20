@@ -8,24 +8,24 @@ from nltk.tokenize import word_tokenize
 
 
 def tweet_generator(tweets):
-        for tweet in tweets:
-            modified_tweet= {}
-            #Write your code here
-            for key in tweet.keys():
-                if key == "user":
-                    modified_tweet['user_id'] = tweet[key]['id']
-                elif key == "retweeted_status":
-                    modified_tweet['retweeted_status_id'] = tweet['retweeted_status']['id']
-                else:
-                    modified_tweet[key] = tweet[key]    
-            yield modified_tweet       
+    for tweet in tweets:
+        modified_tweet= {}
+        #Write your code here
+        for key in tweet.keys():
+            if key == "user":
+                modified_tweet['user_id'] = tweet[key]['id']
+            elif key == "retweeted_status":
+                modified_tweet['retweeted_status_id'] = tweet['retweeted_status']['id']
+            else:
+                modified_tweet[key] = tweet[key]    
+        yield modified_tweet       
 
 def get_things(stuff, things, other):
-        wants = []
-        desires = stuff[things]
-        for craving in desires:
-            wants.append(craving[other])
-        return ', '.join(wants)
+    wants = []
+    desires = stuff[things]
+    for craving in desires:
+        wants.append(craving[other])
+    return ', '.join(wants)
             
             
 def get_tweets(topic, num_tweets):
@@ -103,6 +103,23 @@ def get_tweets(topic, num_tweets):
     tweets_df['topic'] = topic
     return tweets_df
 
+def text_cleaner(text):
+    # Expanding contractions
+#     text = sample_contraction_replacer.do_contraction_normalization(text)
+    import contractions
+    import nltk
+    import emoji
+    from nltk.tokenize import word_tokenize
+    from nltk.stem import WordNetLemmatizer
+    stopwords = nltk.corpus.stopwords.words('english')
+    wnetl = WordNetLemmatizer()
+    text = contractions.fix(text)
+    # Removing stop words
+    tokens = word_tokenize(text)
+    new_tokens = [w for w in tokens if w not in stopwords]
+    # Lemmatizing
+    text = ' '.join([wnetl.lemmatize(w) for w in new_tokens])
+    return text
 
 def clean_tweets(data):
     from nltk.stem import WordNetLemmatizer
