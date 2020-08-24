@@ -14,6 +14,8 @@ def tweet_generator(tweets):
         for key in tweet.keys():
             if key == "user":
                 modified_tweet['user_id'] = tweet[key]['id']
+                modified_tweet[key] = tweet[key]
+#                 modified_tweet['language'] = tweet[key]['lang']
             elif key == "retweeted_status":
                 modified_tweet['retweeted_status_id'] = tweet['retweeted_status']['id']
             else:
